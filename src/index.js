@@ -40,15 +40,15 @@ const MY_SCHEMA = {
 const selectorIdP = document.querySelector("#select-idp");
 const selectorPod = document.querySelector("#select-pod");
 const buttonLogin = document.querySelector("#btnLogin");
-const buttonRead = document.querySelector("#btnRead");
 const buttonUpload = document.querySelector("#btnUpload");
-
+const buttonRead = document.querySelector("#btnRead");
 const buttonView = document.querySelector("#btnView");
 
 
 buttonRead.setAttribute("disabled", "disabled");
 buttonLogin.setAttribute("disabled", "disabled");
 buttonUpload.setAttribute("disabled", "disabled");
+buttonView.setAttribute("disabled", "disabled")
 
 function loginToSelectedIdP() {
   const SELECTED_IDP = document.getElementById("select-idp").value;
@@ -61,12 +61,12 @@ function loginToSelectedIdP() {
 }
 
 async function handleRedirectAfterLogin() {
+  console.log("Handling redirect after login...");
   await handleIncomingRedirect();
 
   const session = getDefaultSession();
   if (session.info.isLoggedIn) {
     document.getElementById("myWebID").value = session.info.webId;
-
     buttonRead.removeAttribute("disabled");
   }
 }
@@ -74,21 +74,8 @@ async function handleRedirectAfterLogin() {
 handleRedirectAfterLogin();
 
 async function getMyPods() {
-  const webID = document.getElementById("myWebID").value;
-  const mypods = await getPodUrlAll(webID, { fetch });
-
-
-  mypods.forEach((mypod) => {
-    let podOption = document.createElement("option");
-    podOption.textContent = mypod;
-    podOption.value = mypod;
-    selectorPod.appendChild(podOption);
-  });
-  console.log(document.getElementById('select-pod').value);
-  if(document.getElementById('select-pod').value != null){
-    buttonUpload.removeAttribute("disabled");}
+ 
 }
-
 
 document.getElementById('btnUpload').onclick = async function () {
   const SELECTED_POD = document.getElementById('select-pod').value;
@@ -248,11 +235,11 @@ async function createFolderIfNotExists(parentFolderUrl, folderName, options) {
 
 document.getElementById('btnView').onclick = async function () {
   const SELECTED_POD = document.getElementById('select-pod').value;
+  document.getElementById('view').style.display = 'block';
 
   try {
-
     const myReadingList = await getSolidDataset(`${SELECTED_POD}healthcare/heart/myList`, { fetch });
-    
+
     const fileNodes = getThingAll(myReadingList);
 
     const predicatesToExtract = [
@@ -265,7 +252,7 @@ document.getElementById('btnView').onclick = async function () {
     const listContainer = document.getElementById('listContainer');
     listContainer.innerHTML = '';
 
-    fileNodes.forEach((fileNode) => {
+    fileNodes.forEach((fileNode, index) => {
       const extractedData = {};
       predicatesToExtract.forEach((predicate) => {
         const value = getStringNoLocale(fileNode, predicate);
@@ -273,40 +260,44 @@ document.getElementById('btnView').onclick = async function () {
         const displayedPropertyName = propertyName.charAt(0).toUpperCase() + propertyName.slice(1);
         extractedData[displayedPropertyName] = value;
       });
+    
+      const card = document.createElement('div');
+      card.classList.add('col', 's12', 'm6','l3');
+      card.style.marginLeft = '20px';
+      card.style.marginTop = '20px';
+      card.innerHTML = `
+        <div class="row"> 
+        <div class="col s12" >
+          <div class="card blue lighten-5"> 
+            <div class="card-content black-text">
+              <span class="card-title" >${extractedData.Name}</span>
+              <p>${extractedData.FirstName} ${extractedData.LastName}</p>
+              <p>${extractedData.Date}</p>
+            </div>
+            <div class="card-action">
+              <button class="btn btn-primary btn-sm" style="background-color: #007BFF;" data-url="${getUrlAll(fileNode, SCHEMA_INRUPT.url)[0]}">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
 
-      const cardContainer = document.createElement('div');
-      cardContainer.classList.add('file-card');
+    
+      listContainer.appendChild(card);
+    });
 
-      Object.keys(extractedData).forEach((propertyName) => {
-        const label = document.createElement('p');
-        label.textContent = `${propertyName}: ${extractedData[propertyName]}`;
-        cardContainer.appendChild(label);
-      });
-
-      const viewButton = document.createElement('button');
-      viewButton.textContent = 'View';
-      viewButton.addEventListener('click', () => {
-        window.location.href = getUrlAll(fileNode, SCHEMA_INRUPT.url)[0]; 
-      });
-      
-      const downloadButton = document.createElement('button');
-      downloadButton.textContent = 'Download';
-      downloadButton.addEventListener('click', () => {
-        const fileURL = getUrlAll(fileNode, SCHEMA_INRUPT.url)[0];
-        const fileName = getStringNoLocale(fileNode, MY_SCHEMA.name);
-        
+    // Add click event for download buttons
+    listContainer.querySelectorAll('.btn-primary').forEach((button) => {
+      button.addEventListener('click', () => {
+        const fileURL = button.getAttribute('data-url');
+        const fileName = fileURL.split('/').pop();
         readFileFromPod(fileURL, fileName);
       });
-      
-      cardContainer.appendChild(viewButton);
-      cardContainer.appendChild(downloadButton);
-
-      listContainer.appendChild(cardContainer);
     });
   } catch (error) {
     console.error('Error retrieving reading list:', error);
   }
 };
+
 
 function createAndAddFileToReadingList(name, url, readingList, firstNameInput, lastNameInput, date) {
   const safeName = name.replace(/ /g, "_");
@@ -373,8 +364,6 @@ async function readFileFromPod(fileURL, name) {
   }
 }
 
-
-
 function logAccessInfo(agent, agentAccess, resource) {
   console.log(`For resource::: ${resource}`);
   if (agentAccess === null) {
@@ -385,8 +374,27 @@ function logAccessInfo(agent, agentAccess, resource) {
 }
 
 
+document.addEventListener('DOMContentLoaded', function() {
+  var modals = document.querySelectorAll('.modal');
+  M.Modal.init(modals);
+});
 
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleSection = document.getElementById('toggleSection');
+  const sectionToToggle = document.getElementById('sectionToToggle');
+  const toggleIcon = document.getElementById('toggleIcon');
 
+  toggleSection.addEventListener('click', function() {
+    // Cambia la visibilità della sezione
+    if (sectionToToggle.style.display === 'none' || sectionToToggle.style.display === '') {
+      sectionToToggle.style.display = 'block';
+      toggleIcon.textContent = 'arrow_drop_up'; // Cambia l'icona a freccia su quando la sezione è visibile
+    } else {
+      sectionToToggle.style.display = 'none';
+      toggleIcon.textContent = 'arrow_drop_down'; // Cambia l'icona a freccia giù quando la sezione è nascosta
+    }
+  });
+});
 
 
 

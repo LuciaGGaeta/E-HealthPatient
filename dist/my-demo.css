@@ -1,11 +1,20 @@
 h2,h3 {
     margin: 1rem 1.2rem 1rem 1.4rem;
 }
-
-body * {
-   margin-left: .5rem;
-   margin-right: 1rem;
+#loginModal{
+ 
+  background-color: white;
 }
+body * {
+ 
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: medium;
+
+}
+h4{
+  font-family: Bodoni;
+}
+
 
 header {
    border-bottom: #5795b9 solid;
@@ -13,7 +22,7 @@ header {
 }
 
 .panel {
-   border: 1px solid #005b81;
+
    border-radius: 4px;
    box-shadow: rgb(184, 196, 194) 0px 4px 10px -4px;
    box-sizing: border-box;
@@ -56,3 +65,29 @@ dt {
 dd {
   grid-column-start: 2;
 }
+
+
+ #view {   height: 300px;
+   
+   overflow-y: auto;
+ }
+ #view{
+   display: none;
+ }
+ #listContainer {
+   /* Imposta l'altezza massima al 100% per consentire la barra di scorrimento */
+   height: 100%;
+ }
+ 
+ .col-md-4 {
+   position: relative;
+   width: 100%;
+   
+ }
+ 
+ #toggleSection {
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
